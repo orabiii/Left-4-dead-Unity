@@ -13,6 +13,8 @@ public class jockey : MonoBehaviour
     Animator anim;
     float inRange = 10f;
     bool chase = false;
+    bool attack = false;
+    bool walkable = true;
     int i = 0;
     /* public Transform [] Destination;
      private Vector3 currentDestination;
@@ -30,11 +32,13 @@ public class jockey : MonoBehaviour
         player = GameObject.FindGameObjectWithTag("Player");
         /*index = 0;
         currentDestination = Destination[0].position;*/
+        StartCoroutine("Reset");
     }
 
     // Update is called once per frame
     void Update()
     {
+        //print(++i);
         float distance = Vector3.Distance(this.transform.position, player.transform.position);
         if (distance <= inRange && chase == false)
         {
@@ -42,9 +46,9 @@ public class jockey : MonoBehaviour
             agent.speed = 1.5f;
             anim.SetBool("chase", true);
             chase = true;
-            print(++i);
+            walkable = true;
         }
-        if (chase)
+        if (chase && walkable)
         {
             agent.SetDestination(player.transform.position);
 
@@ -71,21 +75,52 @@ public class jockey : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player"))
         {
-            print("now");
-            anim.SetBool("idle", false);
-            anim.SetBool("attack", true);
-            Invoke("myTimer", 5);
+            attack = true;
+            StartCoroutine(Reset());
+            //print("now");
+            //anim.SetBool("idle", false);
+            //anim.SetBool("attack", true);
+            //Invoke("myTimer", 5);
 
 
         }
     }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            attack = false;
+            anim.SetBool("attack", false);
+            //walkable = false;
+            agent.SetDestination(agent.transform.position);
+            anim.SetBool("idle", true);
+            Invoke("myTimer", 5);
+            //chase = false;
+        }
+    }
+    IEnumerator Reset()
+    {
+        // your process
+        while (attack)
+        {
+            anim.SetBool("idle", false);
+            anim.SetBool("chase", false);
+            anim.SetBool("attack", true);
+            yield return new WaitForSeconds(5);
+            // continue process
+            if (attack)
+            {
+                anim.SetBool("attack", false);
+                anim.SetBool("idle", true);
+                yield return new WaitForSeconds(5);
+            }
+        }
+    }
     private void myTimer()
     {
-        print("then");
-        
-        anim.SetBool("chase", false);
-        anim.SetBool("idle", true);
-        Invoke("idleTimer", 5);
+        chase = false;
+        /*Invoke("idleTimer", 5);*/
     }
 
     private void idleTimer()
@@ -93,7 +128,7 @@ public class jockey : MonoBehaviour
         anim.SetBool("idle", false);
         anim.SetBool("chase", true);
     }
-    private void OnCollisionExit(Collision collision)
+    /*private void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject.CompareTag("Player"))
         {
@@ -110,6 +145,6 @@ public class jockey : MonoBehaviour
             Invoke("myTimer", 5);
 
         }
-    }
+    }*/
 }
 
